@@ -1,0 +1,9 @@
+../Core/Src/fungsi.c:44:10:minuteToSecond	16	static
+../Core/Src/fungsi.c:49:6:process1	8	static
+../Core/Src/fungsi.c:100:6:process2	8	static
+../Core/Src/fungsi.c:149:6:setMode	16	static
+../Core/Src/fungsi.c:157:6:setTimerEAB	16	static
+../Core/Src/fungsi.c:165:6:setCounter	16	static
+../Core/Src/fungsi.c:173:6:Task2	16	static
+../Core/Src/fungsi.c:196:6:Task3	16	static
+../Core/Src/fungsi.c:208:6:fungsiInit	72	static

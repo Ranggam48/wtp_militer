@@ -1,0 +1,5 @@
+../Core/Src/com_can.c:45:6:HAL_CAN_RxFifo1MsgPendingCallback	24	static
+../Core/Src/com_can.c:83:6:buffer_append_int32	24	static
+../Core/Src/com_can.c:90:6:comm_can_transmit_eid	24	static
+../Core/Src/com_can.c:104:6:comm_can_db_signal	24	static
+../Core/Src/com_can.c:112:6:comm_can_send_buffer	48	static
