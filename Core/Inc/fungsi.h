@@ -17,6 +17,7 @@
 uint32_t minuteToSecond(float value);
 void process1(void);
 void process2(void);
+void process3(void);
 
 void setMode(uint32_t value);
 void setTimerEAB(uint32_t value);
