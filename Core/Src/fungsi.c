@@ -188,7 +188,7 @@ void process3(void) { // opsi backwash ditrigger counter
 	timerBackwash[0] = 30; // timer untuk backwash 30 detik
 
 	while (timerBackwash > 0) { //menunggu sinyal dari driver bahwa backwash telah selesai
-		osDelay(5000);
+		osDelay(1000);
 	}
 
 	if (level) {
