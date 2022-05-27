@@ -24,7 +24,7 @@ typedef enum {
 // kumpulan handle task freeRTOS
 
 osThreadId Task2Handle;
-osThreadId Task3Handle;
+osThreadId TaskTimerEABHandle;
 
 // kumpulan variable dan penanda/flag
 
@@ -142,8 +142,8 @@ void process2(void) // opsi sensor water level
 		goto label2;
 		// kembali ke awal
 	}
-
 	mode[0] = 0;
+	timerEAB[0] = 1800;
 }
 
 void setMode(uint32_t value) {
@@ -186,20 +186,23 @@ void Task2(void const *argument) {
 		}
 
 		else {
-			timerEAB[0] = 30;
+
 		}
 		osDelay(500);
 	}
 	/* USER CODE END 5 */
 }
 
-void Task3(void const *argument) {
+void TaskTimerEAB(void const *argument) {
 	/* USER CODE BEGIN 5 */
 	/* Infinite loop */
 	for (;;) {
-		counter[0]++;
-		//Flash_Write_Data(EEPROMCounter, (uint32_t*) counter, 1);
-		setCounter(counter);
+
+		if (mode[0] == 2 || mode[0] == 1) { // jika mode bernilai satu atau 2 maka timer eab akan mulai hitung mundur
+			timerEAB[0]--;
+			setTimerEAB(timerEAB[0]);
+			osDelay(1000);
+		}
 		osDelay(1000);
 	}
 	/* USER CODE END 5 */
@@ -221,7 +224,7 @@ void fungsiInit(void) {
 	osThreadDef(Task2, Task2, osPriorityNormal, 0, 256);
 	Task2Handle = osThreadCreate(osThread(Task2), NULL);
 
-	osThreadDef(Task3, Task3, osPriorityNormal, 0, 256);
-	Task3Handle = osThreadCreate(osThread(Task3), NULL);
+	osThreadDef(TaskTimerEAB, TaskTimerEAB, osPriorityNormal, 0, 256);
+	TaskTimerEABHandle = osThreadCreate(osThread(TaskTimerEAB), NULL);
 }
 

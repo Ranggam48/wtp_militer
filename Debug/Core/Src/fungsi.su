@@ -5,5 +5,5 @@
 ../Core/Src/fungsi.c:157:6:setTimerEAB	16	static
 ../Core/Src/fungsi.c:165:6:setCounter	16	static
 ../Core/Src/fungsi.c:173:6:Task2	16	static
-../Core/Src/fungsi.c:196:6:Task3	16	static
-../Core/Src/fungsi.c:208:6:fungsiInit	72	static
+../Core/Src/fungsi.c:196:6:TaskTimerEAB	16	static
+../Core/Src/fungsi.c:207:6:fungsiInit	72	static
