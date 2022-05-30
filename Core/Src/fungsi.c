@@ -149,7 +149,9 @@ void process2(void) // opsi sensor water level
 
 void process3(void) { // opsi backwash ditrigger counter
 
-	while (timerEAB > 0) {
+	timerEAB[0] = 1800;
+
+	while (timerEAB[0] > 0) {
 		EAB(ON);
 	}
 
@@ -172,6 +174,8 @@ void process3(void) { // opsi backwash ditrigger counter
 		if (flow < 1) {
 			osDelay(minuteToSecond(1 / 3)); // delay untuk menunggu air pada rdf kosong
 			comm_can_db_signal(0, 4); // mengirim sinyal ke driver untuk backwash
+			flagBackwash = 1; // untuk memulai menghitung mundur timerBackwash pada Task Timer
+			timerBackwash[0] = 30; // timer untuk backwash 30 detik
 			break;
 		}
 	}
@@ -183,13 +187,14 @@ void process3(void) { // opsi backwash ditrigger counter
 	Ozone(OFF);
 	Compressor(OFF);
 	Pump_2(OFF);
-
-	flagBackwash = 1; // untuk memulai menghitung mundur timerBackwash pada Task Timer
-	timerBackwash[0] = 30; // timer untuk backwash 30 detik
+	Pump_3(ON);
 
 	while (timerBackwash > 0) { //menunggu sinyal dari driver bahwa backwash telah selesai
 		osDelay(1000);
 	}
+	Pump_3(OFF);
+
+	flagBackwash = 0;
 
 	if (level) {
 		goto label2;
@@ -235,7 +240,7 @@ void Task2(void const *argument) {
 
 		else if (mode[0] == 3) // mode 2 untuk opsi menggunakan sensor water level
 				{
-
+			process3();
 		}
 
 		else {
@@ -259,6 +264,7 @@ void TaskTimer(void const *argument) {
 		else if (flagBackwash == 1) {
 			timerBackwash[0]--;
 		}
+		//timerBackwash[0] = 0;
 		osDelay(1000);
 	}
 	/* USER CODE END 5 */
