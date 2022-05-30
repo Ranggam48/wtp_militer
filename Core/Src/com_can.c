@@ -56,7 +56,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			case CAN_PACKET_SETMODE:
 				canSetMode = -1;
 				ind = 0;
-				canSetMode = buffer_get_int32(rxmsg.data8, &ind);
+				canSetMode = buffer_get_int32(RxData, &ind);
 				setMode(canSetMode);
 				break;
 
@@ -85,6 +85,15 @@ void buffer_append_int32(uint8_t *buffer, int32_t number, int32_t *index) {
 	buffer[(*index)++] = number >> 16;
 	buffer[(*index)++] = number >> 8;
 	buffer[(*index)++] = number;
+}
+
+int32_t buffer_get_int32(const uint8_t *buffer, int32_t *index) {
+	int32_t res = ((uint32_t) buffer[*index]) << 24
+			| ((uint32_t) buffer[*index + 1]) << 16
+			| ((uint32_t) buffer[*index + 2]) << 8
+			| ((uint32_t) buffer[*index + 3]);
+	*index += 4;
+	return res;
 }
 
 void comm_can_transmit_eid(uint32_t id, const uint8_t *data, uint8_t len) {

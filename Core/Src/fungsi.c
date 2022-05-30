@@ -25,6 +25,7 @@ typedef enum {
 
 osThreadId Task2Handle;
 osThreadId TaskTimerHandle;
+osThreadId TaskFlowHandle;
 
 // kumpulan variable dan penanda/flag
 
@@ -39,6 +40,7 @@ uint32_t counter[1] = { 0 };
 uint32_t timerBackwash[1] = { 0 };
 
 float volume, flow;
+int signalCounter;
 
 // kumpulan fungsi
 
@@ -100,6 +102,8 @@ void process1(void) // opsi sensor ultrasonic
 
 void process2(void) // opsi sensor water level
 {
+	timerEAB[0] = 1800;
+
 	while (timerEAB > 0) {
 		EAB(ON);
 	}
@@ -108,7 +112,7 @@ void process2(void) // opsi sensor water level
 	osDelay(minuteToSecond(1));
 	label2: comm_can_db_signal(0, 2); // megirim sinyal untuk memutarkan HVRDF
 
-	osDelay(minuteToSecond(0.5));
+	osDelay(minuteToSecond(1 / 6));
 
 	Control_Valve_1(ON);
 	Pump_1(ON);
@@ -120,7 +124,7 @@ void process2(void) // opsi sensor water level
 
 	while (level) {
 		osDelay(5000);
-		if (flow < 1) {
+		if (flow < 4.0) {
 			osDelay(minuteToSecond(1 / 3)); // delay untuk menunggu air pada rdf kosong
 			comm_can_db_signal(0, 3); // mengirim sinyal ke driver untuk backwash
 			break;
@@ -264,8 +268,27 @@ void TaskTimer(void const *argument) {
 		else if (flagBackwash == 1) {
 			timerBackwash[0]--;
 		}
-		//timerBackwash[0] = 0;
+		flow = signalCounter / 7.5;
+		signalCounter = 0;
 		osDelay(1000);
+
+	}
+	/* USER CODE END 5 */
+}
+
+void TaskFlow(void const *argument) {
+	/* USER CODE BEGIN 5 */
+	int stateSensorNow = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+	int stateSensorPrv = -1;
+
+	/* Infinite loop */
+	for (;;) {
+		stateSensorNow = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+		if (stateSensorNow != stateSensorPrv) {
+			signalCounter++;
+			stateSensorPrv = stateSensorNow;
+		}
+		osDelay(1);
 	}
 	/* USER CODE END 5 */
 }
@@ -288,5 +311,8 @@ void fungsiInit(void) {
 
 	osThreadDef(TaskTimer, TaskTimer, osPriorityNormal, 0, 256);
 	TaskTimerHandle = osThreadCreate(osThread(TaskTimer), NULL);
+
+	osThreadDef(TaskFlow, TaskFlow, osPriorityNormal, 0, 256);
+	TaskFlowHandle = osThreadCreate(osThread(TaskFlow), NULL);
 }
 
