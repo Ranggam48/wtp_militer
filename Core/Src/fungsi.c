@@ -120,13 +120,11 @@ void process2(void) // opsi sensor water level
 	Compressor(ON);
 	Pump_2(ON);
 
-	osDelay(minuteToSecond(0.3));
+	//osDelay(minuteToSecond(0.3));
 
 	while (level) {
-		osDelay(5000);
+		osDelay(1000);
 		if (flow < 4.0) {
-			osDelay(minuteToSecond(1 / 3)); // delay untuk menunggu air pada rdf kosong
-			comm_can_db_signal(0, 3); // mengirim sinyal ke driver untuk backwash
 			break;
 		}
 	}
@@ -139,9 +137,21 @@ void process2(void) // opsi sensor water level
 	Compressor(OFF);
 	Pump_2(OFF);
 
-	while (!backWashCheck) { //menunggu sinyal dari driver bahwa backwash telah selesai
-		osDelay(5000);
+	osDelay(minuteToSecond(1 / 3)); // delay untuk menunggu air pada rdf kosong
+	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
+	comm_can_db_signal(0, 4); // mengirim sinyal ke driver untuk backwash
+
+	Pump_3(ON); // pompa backwash menyala
+
+	uint8_t i = 0;
+
+	while (i <= 30) { //menunggu sinyal dari driver bahwa backwash telah selesai
+		osDelay(1000);
+		i++;
 	}
+	Pump_3(OFF); //pompa backwash mati
+
+	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
 
 	if (level) {
 		goto label2;
@@ -193,8 +203,11 @@ void process3(void) { // opsi backwash ditrigger counter
 	Pump_2(OFF);
 	Pump_3(ON);
 
-	while (timerBackwash > 0) { //menunggu sinyal dari driver bahwa backwash telah selesai
+	uint8_t i = 0;
+
+	while (i <= 30) { //menunggu sinyal dari driver bahwa backwash telah selesai
 		osDelay(1000);
+		i++;
 	}
 	Pump_3(OFF);
 
