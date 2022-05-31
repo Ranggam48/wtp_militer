@@ -7,5 +7,5 @@
 ../Core/Src/fungsi.c:235:6:setCounter	16	static
 ../Core/Src/fungsi.c:243:6:Task2	16	static
 ../Core/Src/fungsi.c:271:6:TaskTimer	16	static
-../Core/Src/fungsi.c:292:6:TaskFlow	24	static
-../Core/Src/fungsi.c:309:6:fungsiInit	104	static
+../Core/Src/fungsi.c:293:6:TaskFlow	24	static
+../Core/Src/fungsi.c:310:6:fungsiInit	104	static

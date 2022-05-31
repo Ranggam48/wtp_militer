@@ -281,6 +281,7 @@ void TaskTimer(void const *argument) {
 		else if (flagBackwash == 1) {
 			timerBackwash[0]--;
 		}
+		mode[0] = 9;
 		flow = signalCounter / 7.5;
 		signalCounter = 0;
 		osDelay(1000);
@@ -291,12 +292,12 @@ void TaskTimer(void const *argument) {
 
 void TaskFlow(void const *argument) {
 	/* USER CODE BEGIN 5 */
-	int stateSensorNow = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+	int stateSensorNow = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
 	int stateSensorPrv = -1;
 
 	/* Infinite loop */
 	for (;;) {
-		stateSensorNow = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+		stateSensorNow = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
 		if (stateSensorNow != stateSensorPrv) {
 			signalCounter++;
 			stateSensorPrv = stateSensorNow;

@@ -43,11 +43,11 @@ void gpio_init(void) {
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 	/*Configure GPIO pin : PA8 */
-	GPIO_InitStruct.Pin = GPIO_PIN_15;
+	GPIO_InitStruct.Pin = GPIO_PIN_5;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
