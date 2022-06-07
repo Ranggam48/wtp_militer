@@ -24,7 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 //#include "string.h"
-//#include "com_can.h"
+#include "com_can.h"
 //#include "FLASH.h"
 //#include <gpio.h>
 //#include <HC04.h>
@@ -105,7 +105,7 @@ int main(void) {
 	MX_TIM2_Init();
 	MX_TIM3_Init();
 	/* USER CODE BEGIN 2 */
-	fungsiInit();
+
 	/* USER CODE END 2 */
 
 	/* USER CODE BEGIN RTOS_MUTEX */
@@ -126,12 +126,11 @@ int main(void) {
 
 	/* Create the thread(s) */
 	/* definition and creation of defaultTask */
-	osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+	osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 64);
 	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
-
+	fungsiInit();
 	/* USER CODE END RTOS_THREADS */
 
 	/* Start scheduler */
@@ -384,18 +383,17 @@ static void MX_GPIO_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const *argument) {
 	/* USER CODE BEGIN 5 */
+
 	/* Infinite loop */
 	for (;;) {
-		//Ultrasonic_Read1();
-
-		//timerEAB--;
-//		Flash_Write_Data(EEPROMTimerEAB, (uint32_t*) timerEAB, 1);
-//		Flash_Write_Data(EEPROMMode, (uint32_t*) mode, 1);
-		osDelay(1000);
+		for (uint8_t a = 0; a < 8; a++) {
+			HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+			osDelay(50);
+		}
+		osDelay(500);
 	}
 	/* USER CODE END 5 */
 }
-
 /**
  * @brief  Period elapsed callback in non blocking mode
  * @note   This function is called  when TIM4 interrupt took place, inside

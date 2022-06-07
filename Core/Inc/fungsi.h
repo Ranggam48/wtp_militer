@@ -12,9 +12,11 @@
 
 #define EEPROMTimerEAB 0x0801F840 // address EEPROM
 #define EEPROMMode 0x0801F850 // address EEPROM
-#define EEPROMCounter 0x0801F860 // address EEPROM
+#define EEPROMCounter 0x0801F890 // address EEPROM
 
 uint32_t minuteToSecond(float value);
+void delay_s(uint8_t value);
+void backWash(void);
 void process1(void);
 void process2(void);
 void process3(void);
@@ -24,6 +26,8 @@ void setTimerEAB(uint32_t value);
 void setCounter(uint32_t value);
 
 void Task2(void const *argument);
+void TaskFlow(void const *argument);
+void TaskTimer(void const *argument);
 
 void fungsiInit(void);
 

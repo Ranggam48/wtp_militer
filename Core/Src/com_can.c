@@ -38,7 +38,7 @@ uint8_t commands_send;
 unsigned int rxbuf_len;
 extern unsigned int rxbuf_ind;
 
-int canSetMode = 0;
+int canSetMode;
 
 //static unsigned int rx_buffer_last_id;
 

@@ -29,14 +29,15 @@ osThreadId TaskFlowHandle;
 
 // kumpulan variable dan penanda/flag
 
-uint8_t flowCheck, backWashCheck, flag, level, flagBackwash;
+uint8_t flowCheck, backWashCheck, flag, level, flagBackwash, coba;
 uint8_t selfID = 1;
 uint8_t data[13] = "Hallo Rangga\n";
 
-uint32_t buff[1] = { 0 };
-uint32_t timerEAB[1] = { 0 };
-uint32_t mode[1] = { 0 };
+uint32_t buffEAB[1] = { 0 };
+uint32_t buffMode[1] = { 0 };
+int timerEAB[1] = { 600 };
 uint32_t counter[1] = { 0 };
+uint32_t mode[1] = { 0 };
 uint32_t timerBackwash[1] = { 0 };
 
 float volume, flow;
@@ -47,6 +48,39 @@ int signalCounter;
 uint32_t minuteToSecond(float value) {
 
 	return value * 60 * 1000;
+
+}
+
+void delay_s(uint8_t value) {
+	osDelay(value * 1000);
+}
+
+void backWash(void) {
+
+	Control_Valve_1(OFF);
+	//osDelay(1000); // delay menghabiskan air pada selang
+	Pump_1(OFF);
+	delay_s(2); // delay menghabiskan air pada selang
+	Ozone(OFF);
+	Compressor(OFF);
+	//Pump_2(OFF);
+
+	delay_s(20); // delay untuk menunggu air pada rdf kosong
+	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
+	delay_s(1); // delay agar motor tidak menyentak
+	comm_can_db_signal(0, 4); // mengirim sinyal ke driver untuk backwash
+	delay_s(3);
+	Pump_3(ON); // pompa backwash menyala
+
+	uint8_t i = 0;
+
+	while (i <= 30) { //menunggu sinyal dari driver bahwa backwash telah selesai
+		osDelay(1000);
+		i++;
+	}
+	Pump_3(OFF); //pompa backwash mati
+	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
+	delay_s(5);
 }
 
 void process1(void) // opsi sensor ultrasonic
@@ -97,22 +131,26 @@ void process1(void) // opsi sensor ultrasonic
 	}
 
 	flowCheck = 0;
-	mode[0] = 0;
+	buffMode[0] = 0;
 }
 
 void process2(void) // opsi sensor water level
 {
-	timerEAB[0] = 1800;
+	//timerEAB[0] = 1800;
 
-	while (timerEAB > 0) {
+	while (timerEAB[0] > 0) {
 		EAB(ON);
+		osDelay(10);
 	}
 
 	EAB(OFF);
-	osDelay(minuteToSecond(1));
-	label2: comm_can_db_signal(0, 2); // megirim sinyal untuk memutarkan HVRDF
+	delay_s(30);
 
-	osDelay(minuteToSecond(1 / 6));
+	label2:
+
+	comm_can_db_signal(0, 2); // megirim sinyal untuk memutarkan HVRDF
+
+	delay_s(15); //delay untuk menunggu rdf putaran penuh
 
 	Control_Valve_1(ON);
 	Pump_1(ON);
@@ -120,50 +158,27 @@ void process2(void) // opsi sensor water level
 	Compressor(ON);
 	Pump_2(ON);
 
-	//osDelay(minuteToSecond(0.3));
+	delay_s(30);
 
-	while (level) {
+	while (1) {
 		osDelay(1000);
 		if (flow < 4.0) {
+			backWash();
 			break;
 		}
 	}
 
-	Control_Valve_1(OFF);
-	osDelay(1000); // delay menghabiskan air pada selang
-	Pump_1(OFF);
-	osDelay(minuteToSecond(1 / 6)); // delay menghabiskan air pada selang
-	Ozone(OFF);
-	Compressor(OFF);
-	Pump_2(OFF);
-
-	osDelay(minuteToSecond(1 / 3)); // delay untuk menunggu air pada rdf kosong
-	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
-	comm_can_db_signal(0, 4); // mengirim sinyal ke driver untuk backwash
-
-	Pump_3(ON); // pompa backwash menyala
-
-	uint8_t i = 0;
-
-	while (i <= 30) { //menunggu sinyal dari driver bahwa backwash telah selesai
-		osDelay(1000);
-		i++;
-	}
-	Pump_3(OFF); //pompa backwash mati
-
-	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
-
-	if (level) {
+	if (1) {
 		goto label2;
 		// kembali ke awal
 	}
-	mode[0] = 0;
-	timerEAB[0] = 1800;
+
+	Pump_2(OFF);
+	buffMode[0] = 0;
+	timerEAB[0] = 120;
 }
 
 void process3(void) { // opsi backwash ditrigger counter
-
-	timerEAB[0] = 1800;
 
 	while (timerEAB[0] > 0) {
 		EAB(ON);
@@ -183,7 +198,7 @@ void process3(void) { // opsi backwash ditrigger counter
 
 	osDelay(minuteToSecond(0.3));
 
-	while (level) {
+	while (1) {
 		osDelay(5000);
 		if (flow < 1) {
 			osDelay(minuteToSecond(1 / 3)); // delay untuk menunggu air pada rdf kosong
@@ -217,18 +232,21 @@ void process3(void) { // opsi backwash ditrigger counter
 		goto label2;
 		// kembali ke awal
 	}
-	mode[0] = 0;
+	buffMode[0] = 0;
 	timerEAB[0] = 1800;
 }
 
 void setMode(uint32_t value) {
 
-	Flash_Write_Data(EEPROMMode, (uint32_t*) value, 1);
+	buffMode[0] = value;
+//	Flash_Write_Data(EEPROMMode, (uint32_t*) buffMode, 1);
+//	Flash_Read_Data(EEPROMMode, buffMode, 1);
+
 }
 
 void setTimerEAB(uint32_t value) {
 
-	Flash_Write_Data(EEPROMMode, (uint32_t*) value, 1);
+	Flash_Write_Data(EEPROMTimerEAB, (uint32_t*) value, 1);
 
 }
 
@@ -242,28 +260,31 @@ void setCounter(uint32_t value) {
 
 void Task2(void const *argument) {
 	/* USER CODE BEGIN 5 */
+
 	/* Infinite loop */
 	for (;;) {
 
-		if (mode[0] == 1) // mode 1 untuk opsi menggunakan sensor ultrasonic
+		if (buffMode[0] == 1) // mode 1 untuk opsi menggunakan sensor ultrasonic
 				{
 
 		}
 
-		else if (mode[0] == 2) // mode 2 untuk opsi menggunakan sensor water level
+		else if (buffMode[0] == 2) // mode 2 untuk opsi menggunakan sensor water level
 				{
-
+			process2();
 		}
 
-		else if (mode[0] == 3) // mode 2 untuk opsi menggunakan sensor water level
+		else if (buffMode[0] == 3) // mode 2 untuk opsi menggunakan sensor water level
 				{
 			process3();
 		}
 
-		else {
-
+		else if (buffMode[0] == 0) {
+			timerEAB[0] = 120;
 		}
-		osDelay(500);
+		osDelay(1000);
+		coba++;
+
 	}
 	/* USER CODE END 5 */
 }
@@ -273,18 +294,19 @@ void TaskTimer(void const *argument) {
 	/* Infinite loop */
 	for (;;) {
 
-		if (mode[0] == 2 || mode[0] == 1 || mode[0] == 3) { // jika mode bernilai 1/2/3 maka timer eab akan mulai hitung mundur
+		if (buffMode[0] == 2 || buffMode[0] == 1 || buffMode[0] == 3) { // jika mode bernilai 1/2/3 maka timer eab akan mulai hitung mundur
 			timerEAB[0]--;
-			setTimerEAB(timerEAB[0]);
 		}
 
 		else if (flagBackwash == 1) {
 			timerBackwash[0]--;
 		}
-		mode[0] = 9;
 		flow = signalCounter / 7.5;
 		signalCounter = 0;
+
 		osDelay(1000);
+		setTimerEAB(timerEAB);
+		//comm_can_send_buffer(7, data, sizeof(data), 0);
 
 	}
 	/* USER CODE END 5 */
@@ -292,9 +314,8 @@ void TaskTimer(void const *argument) {
 
 void TaskFlow(void const *argument) {
 	/* USER CODE BEGIN 5 */
-	int stateSensorNow = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
-	int stateSensorPrv = -1;
-
+	uint8_t stateSensorNow = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
+	uint8_t stateSensorPrv = -1;
 	/* Infinite loop */
 	for (;;) {
 		stateSensorNow = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
@@ -311,22 +332,25 @@ void fungsiInit(void) {
 
 	gpio_init();
 
-	Flash_Read_Data(EEPROMMode, buff, 1); // membaca eeprom mode
-	mode[0] = buff[0];
+//	Flash_Read_Data(EEPROMMode, buffMode, 1); // membaca eeprom mode
+//	mode[0] = buffMode[0];
+//
+//	Flash_Read_Data(EEPROMCounter, buff, 1); // membaca eeprom counter
+//	counter[0] = buff[0];
 
-	Flash_Read_Data(EEPROMTimerEAB, buff, 1); // membaca eeprom timerEAB
-	timerEAB[0] = buff[0];
+	Flash_Read_Data(EEPROMTimerEAB, buffEAB, 1); // membaca eeprom timerEAB
+	//memcpy(timerEAB, buffEAB, 1);
+	timerEAB[0] = buffEAB[0];
 
-	Flash_Read_Data(EEPROMCounter, buff, 1); // membaca eeprom counter
-	counter[0] = buff[0];
+	buffMode[0] = 2;
 
-	osThreadDef(Task2, Task2, osPriorityNormal, 0, 256);
-	Task2Handle = osThreadCreate(osThread(Task2), NULL);
-
-	osThreadDef(TaskTimer, TaskTimer, osPriorityNormal, 0, 256);
+	osThreadDef(TaskTimer, TaskTimer, osPriorityNormal, 0, 128);
 	TaskTimerHandle = osThreadCreate(osThread(TaskTimer), NULL);
 
-	osThreadDef(TaskFlow, TaskFlow, osPriorityNormal, 0, 256);
+	osThreadDef(Task2, Task2, osPriorityNormal, 0, 128);
+	Task2Handle = osThreadCreate(osThread(Task2), NULL);
+
+	osThreadDef(TaskFlow, TaskFlow, osPriorityBelowNormal, 0, 128);
 	TaskFlowHandle = osThreadCreate(osThread(TaskFlow), NULL);
 }
 
