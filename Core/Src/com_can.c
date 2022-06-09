@@ -16,6 +16,7 @@
 #define CAN_PACKET_FILL_RX_BUFFER_LONG 6
 #define CAN_PACKET_PROCESS_RX_BUFFER 7
 #define RX_BUFFER_SIZE 64
+#define CAN_PACKET_SET_DUTY_GEN 36
 
 extern CAN_HandleTypeDef hcan;
 extern uint32_t selfID;
@@ -107,6 +108,15 @@ void comm_can_transmit_eid(uint32_t id, const uint8_t *data, uint8_t len) {
 	TxHeader.DLC = len;
 	memcpy(TxData, data, len);
 	HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+}
+
+void comm_can_set_duty(uint8_t controller_id, float duty) {
+	int32_t send_index = 0;
+	uint8_t buffer[4];
+	buffer_append_int32(buffer, (int32_t) (duty * 100.0), &send_index);
+	comm_can_transmit_eid(
+			controller_id | ((uint32_t) CAN_PACKET_SET_DUTY_GEN << 8), buffer,
+			send_index);
 }
 
 void comm_can_db_signal(uint8_t controller_id, int command) {

@@ -10,9 +10,7 @@
 
 #include "stm32f1xx_hal.h"
 
-#define EEPROMTimerEAB 0x0801F840 // address EEPROM
-#define EEPROMMode 0x0801F850 // address EEPROM
-#define EEPROMCounter 0x0801F890 // address EEPROM
+#define ADDRESS 0x0801F840 // address EEPROM
 
 uint32_t minuteToSecond(float value);
 void delay_s(uint8_t value);

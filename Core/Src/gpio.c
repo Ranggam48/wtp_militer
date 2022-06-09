@@ -53,7 +53,7 @@ void gpio_init(void) {
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 	/*Configure GPIO pin : PB5 */
-	GPIO_InitStruct.Pin = GPIO_PIN_5;
+	GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_4;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

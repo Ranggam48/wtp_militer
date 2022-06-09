@@ -1,6 +1,7 @@
-../Core/Src/com_can.c:46:6:HAL_CAN_RxFifo1MsgPendingCallback	24	static
-../Core/Src/com_can.c:83:6:buffer_append_int32	24	static
-../Core/Src/com_can.c:90:9:buffer_get_int32	24	static
-../Core/Src/com_can.c:99:6:comm_can_transmit_eid	24	static
-../Core/Src/com_can.c:112:6:comm_can_db_signal	24	static
-../Core/Src/com_can.c:120:6:comm_can_send_buffer	48	static
+../Core/Src/com_can.c:47:6:HAL_CAN_RxFifo1MsgPendingCallback	24	static
+../Core/Src/com_can.c:84:6:buffer_append_int32	24	static
+../Core/Src/com_can.c:91:9:buffer_get_int32	24	static
+../Core/Src/com_can.c:100:6:comm_can_transmit_eid	24	static
+../Core/Src/com_can.c:113:6:comm_can_set_duty	24	static
+../Core/Src/com_can.c:122:6:comm_can_db_signal	24	static
+../Core/Src/com_can.c:130:6:comm_can_send_buffer	48	static

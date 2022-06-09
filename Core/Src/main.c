@@ -122,6 +122,7 @@ int main(void) {
 
 	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
+	fungsiInit();
 	/* USER CODE END RTOS_QUEUES */
 
 	/* Create the thread(s) */
@@ -130,7 +131,6 @@ int main(void) {
 	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
-	fungsiInit();
 	/* USER CODE END RTOS_THREADS */
 
 	/* Start scheduler */
