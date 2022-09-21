@@ -25,14 +25,17 @@ typedef enum {
 osThreadId Task2Handle;
 osThreadId TaskTimerHandle;
 osThreadId TaskFlowHandle;
+osThreadId TaskButtonHandle;
 
 // kumpulan variable dan penanda/flag
 
 uint8_t flowCheck, backWashCheck, flag, level, flagBackwash, flagTimerEAB,
-		flagRecoveryEAB, coba, sensor;
+		flagRecoveryEAB, cobaTask2, cobaTaskTimer, cobaTaskButton, cobaTaskFlow,
+		sensor;
 
 uint8_t selfID = 1;
 uint8_t dataCan[8];
+uint8_t p;
 
 uint32_t buffEAB;
 uint32_t timerEAB;
@@ -49,7 +52,7 @@ uint32_t dataWrite[10];
 uint32_t dataRead[10];
 
 float volume, flow; // variabel untuk flow sensor
-int signalCounter; // variabel untuk counter hall sensor
+int signalCounter, buttonCounter; // variabel untuk counter hall sensor dan button
 
 // kumpulan fungsi
 
@@ -96,8 +99,8 @@ void backWash(void) {
 	delay_s(5);
 }
 
-void process2(void) // opsi sensor water level
-{
+void process(void) {
+
 	delay_s(2);
 
 //	if (level == 1) {
@@ -106,21 +109,28 @@ void process2(void) // opsi sensor water level
 //		return;
 //	}
 
-	flagTimerEAB = 1;
-	while (timerEAB < 1800) {
+	flagTimerEAB = 1; // flag untuk memulai timer EAB
+
+	while (timerEAB < 1200) {
 		EAB(ON);
 		delay_s(1);
+		if (mode == 0) {
+			goto end;
+		}
 	}
 	EAB(OFF);
-	flagTimerEAB = 0;
 
-	flagRecoveryEAB = 1;
+	flagTimerEAB = 0; // flag untuk menghentikan timer EAB
+
+	flagRecoveryEAB = 1; // flag untuk recover EAB
+
 	while (timerRecoveryEAB < 600) {
 		delay_s(1);
 	}
-	flagRecoveryEAB = 0;
 
-	label2:
+	flagRecoveryEAB = 0; // flag untuk recover EAB
+
+	label2: // balik lagi ke sini jika air masih penuh
 
 	comm_can_set_duty(0, 95);
 	comm_can_db_signal(0, 2); // megirim sinyal untuk memutarkan HVRDF
@@ -141,7 +151,9 @@ void process2(void) // opsi sensor water level
 	while (1) {
 
 		osDelay(3000);
-		if (flow < 4 || level == 1) {
+
+		if (flow < 4 //|| level == 1
+		|| mode == 0) {
 			countBackwash++;
 			delay_s(1);
 			setCountBackwash(countBackwash);
@@ -149,21 +161,35 @@ void process2(void) // opsi sensor water level
 			dataCan[1] = lamaMampet & 0x00ff;
 			dataCan[2] = (lamaMampet & 0xff00) >> 8;
 			comm_can_transmit_eid(4, dataCan, 8);
+			Ozone(OFF);
+			Compressor(OFF);
 			backWash();
 			break;
 		}
 	}
 
-	if (level == 1) {
-		goto label2;
-		// kembali ke awal
+	if (mode == 0) {
+		goto end;
 	}
 
+//	if (level == 1) {
+//		goto label2;
+//		// kembali ke awal
+//	}
+	goto label2;
+
+	end:
+
+	EAB(OFF);
 	delay_s(3);
 	Pump_2(OFF);
 	mode = 0;
 	countProcess++;
 	setCountProcess(countProcess);
+
+	flagTimerEAB = 0;
+	flagRecoveryEAB = 0;
+
 }
 
 void setMode(uint32_t value) {
@@ -224,12 +250,12 @@ void Task2(void const *argument) {
 
 		if (mode == 1) // mode 1 untuk opsi menggunakan sensor ultrasonic
 				{
-
+			process();
 		}
 
 		else if (mode == 2) // mode 2 untuk opsi menggunakan sensor water level
 				{
-			process2();
+
 		}
 
 		else if (mode == 3) // mode 2 untuk opsi menggunakan sensor water level
@@ -245,7 +271,7 @@ void Task2(void const *argument) {
 			setTimerRcoveryEAB(timerRecoveryEAB);
 		}
 		osDelay(1000);
-		coba++;
+		//cobaTask2++;
 
 	}
 	/* USER CODE END 5 */
@@ -253,19 +279,18 @@ void Task2(void const *argument) {
 
 void TaskTimer(void const *argument) {
 	/* USER CODE BEGIN 5 */
-	uint32_t i = 0;
 	/* Infinite loop */
 	for (;;) {
 
 		if (flagTimerEAB == 1) { // jika mode bernilai 1 maka timer eab akan mulai hitung
+
 			timerEAB++;
-			i = timerEAB;
 			setTimerEAB(timerEAB);
-			if (i % 60 == 0 && i > 60) {
+			if (timerEAB % 60 == 0) {
 				lamaPakaiEAB++;
 				setLamaPakaiEAB(lamaPakaiEAB);
-				i = 0;
 			}
+
 		}
 
 		if (flagRecoveryEAB == 1) {
@@ -284,6 +309,7 @@ void TaskTimer(void const *argument) {
 
 		flow = signalCounter / 7.5;
 		signalCounter = 0;
+		cobaTaskTimer++;
 		osDelay(1000);
 
 	}
@@ -302,7 +328,32 @@ void TaskFlow(void const *argument) {
 			signalCounter++;
 			stateSensorPrv = stateSensorNow;
 		}
+		//cobaTaskFlow++;
 		osDelay(1);
+	}
+	/* USER CODE END 5 */
+}
+
+void TaskButton(void const *argument) {
+	/* USER CODE BEGIN 5 */
+	uint8_t stateButtonNow = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+	uint8_t stateButtonPrv = 1;
+
+	/* Infinite loop */
+	for (;;) {
+		stateButtonNow = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+		if (stateButtonNow == 1 && stateButtonPrv == 0) {
+			mode++;
+			if (mode > 1) {
+				mode = 0;
+			}
+			stateButtonPrv = 1;
+		} else if (stateButtonNow == 0) {
+			stateButtonPrv = 0;
+		}
+		osDelay(10);
+		//cobaTaskButton++;
+		setMode(mode);
 	}
 	/* USER CODE END 5 */
 }
@@ -313,25 +364,35 @@ void fungsiInit(void) {
 
 	// pembacaan eeprom
 	mode = EEPROM_Read_NUM(1, MODE);
+	HAL_Delay(10);
 	timerEAB = EEPROM_Read_NUM(1, TIMEREAB);
+	HAL_Delay(10);
 	countBackwash = EEPROM_Read_NUM(1, COUNTBACKWASH);
+	HAL_Delay(10);
 	countProcess = EEPROM_Read_NUM(1, COUNTPROCESS);
+	HAL_Delay(10);
 	lamaProcess = EEPROM_Read_NUM(1, LAMAPROCESS);
+	HAL_Delay(10);
 	lamaPakaiEAB = EEPROM_Read_NUM(1, LAMAPAKAIEAB);
+	HAL_Delay(10);
 	timerRecoveryEAB = EEPROM_Read_NUM(1, TIMERRECOVERYEAB);
+	HAL_Delay(10);
 
-	mode = 2;
-	setMode(mode);
-	setLamaPakaiEAB(600);
-	setCountBackwash(102);
+	//mode = 2;
+//	setMode(mode);
+//	setLamaPakaiEAB(630);
+//	setCountBackwash(154);
 
-	osThreadDef(TaskTimer, TaskTimer, osPriorityNormal, 0, 128);
+	osThreadDef(TaskTimer, TaskTimer, osPriorityNormal, 0, 64);
 	TaskTimerHandle = osThreadCreate(osThread(TaskTimer), NULL);
 
-	osThreadDef(Task2, Task2, osPriorityNormal, 0, 128);
+	osThreadDef(Task2, Task2, osPriorityNormal, 0, 64);
 	Task2Handle = osThreadCreate(osThread(Task2), NULL);
 
-	osThreadDef(TaskFlow, TaskFlow, osPriorityBelowNormal, 0, 128);
+	osThreadDef(TaskFlow, TaskFlow, osPriorityBelowNormal, 0, 64);
 	TaskFlowHandle = osThreadCreate(osThread(TaskFlow), NULL);
+
+	osThreadDef(TaskButton, TaskButton, osPriorityBelowNormal, 0, 64);
+	TaskButtonHandle = osThreadCreate(osThread(TaskButton), NULL);
 }
 

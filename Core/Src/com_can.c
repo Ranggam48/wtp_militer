@@ -17,6 +17,7 @@
 #define CAN_PACKET_PROCESS_RX_BUFFER 7
 #define RX_BUFFER_SIZE 64
 #define CAN_PACKET_SET_DUTY_GEN 36
+#define CAN_PACKET_ERRORMASSAGE 37
 
 extern CAN_HandleTypeDef hcan;
 extern uint32_t selfID;
@@ -60,7 +61,6 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 				canSetMode = buffer_get_int32(RxData, &ind);
 				setMode(canSetMode);
 				break;
-
 			case CAN_PACKET_FILL_RX_BUFFER:
 				memcpy(rx_buffer + RxData[0], RxData + 1, RxHeader.DLC - 1);
 				break;
@@ -124,6 +124,15 @@ void comm_can_db_signal(uint8_t controller_id, int command) {
 	uint8_t buffer[4];
 	buffer_append_int32(buffer, (int32_t) command, &send_index);
 	comm_can_transmit_eid(controller_id | ((uint32_t) 35 << 8), buffer,
+			send_index);
+}
+
+void comm_can_error_massage(uint8_t controller_id, int command) {
+	int32_t send_index = 0;
+	uint8_t buffer[4];
+	buffer_append_int32(buffer, (int32_t) command, &send_index);
+	comm_can_transmit_eid(
+			controller_id | ((uint32_t) CAN_PACKET_ERRORMASSAGE << 8), buffer,
 			send_index);
 }
 
