@@ -124,8 +124,8 @@ void gpio_init(void) {
 
 void EAB(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, value);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, value);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, value);
+	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, value);
+	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, value);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, value);
 }
 

@@ -41,6 +41,7 @@ unsigned int rxbuf_len;
 extern unsigned int rxbuf_ind;
 
 int canSetMode;
+extern uint32_t mode;
 
 //static unsigned int rx_buffer_last_id;
 
@@ -58,8 +59,9 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 			case CAN_PACKET_SETMODE:
 				canSetMode = -1;
 				ind = 0;
-				canSetMode = buffer_get_int32(RxData, &ind);
-				setMode(canSetMode);
+				mode = buffer_get_int32(RxData, &ind);
+				//mode = canSetMode;
+				//setMode(mode);
 				break;
 			case CAN_PACKET_FILL_RX_BUFFER:
 				memcpy(rx_buffer + RxData[0], RxData + 1, RxHeader.DLC - 1);
@@ -127,7 +129,7 @@ void comm_can_db_signal(uint8_t controller_id, int command) {
 			send_index);
 }
 
-void comm_can_error_massage(uint8_t controller_id, int command) {
+void comm_can_error_message(uint8_t controller_id, int command) {
 	int32_t send_index = 0;
 	uint8_t buffer[4];
 	buffer_append_int32(buffer, (int32_t) command, &send_index);

@@ -7,8 +7,10 @@
 C_SRCS += \
 ../Core/Src/EEPROM.c \
 ../Core/Src/HC04.c \
+../Core/Src/adc.c \
 ../Core/Src/com_can.c \
 ../Core/Src/crc.c \
+../Core/Src/error_handler.c \
 ../Core/Src/freertos.c \
 ../Core/Src/fungsi.c \
 ../Core/Src/gpio.c \
@@ -24,8 +26,10 @@ C_SRCS += \
 OBJS += \
 ./Core/Src/EEPROM.o \
 ./Core/Src/HC04.o \
+./Core/Src/adc.o \
 ./Core/Src/com_can.o \
 ./Core/Src/crc.o \
+./Core/Src/error_handler.o \
 ./Core/Src/freertos.o \
 ./Core/Src/fungsi.o \
 ./Core/Src/gpio.o \
@@ -41,8 +45,10 @@ OBJS += \
 C_DEPS += \
 ./Core/Src/EEPROM.d \
 ./Core/Src/HC04.d \
+./Core/Src/adc.d \
 ./Core/Src/com_can.d \
 ./Core/Src/crc.d \
+./Core/Src/error_handler.d \
 ./Core/Src/freertos.d \
 ./Core/Src/fungsi.d \
 ./Core/Src/gpio.d \
@@ -63,7 +69,7 @@ Core/Src/%.o Core/Src/%.su: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/EEPROM.d ./Core/Src/EEPROM.o ./Core/Src/EEPROM.su ./Core/Src/HC04.d ./Core/Src/HC04.o ./Core/Src/HC04.su ./Core/Src/com_can.d ./Core/Src/com_can.o ./Core/Src/com_can.su ./Core/Src/crc.d ./Core/Src/crc.o ./Core/Src/crc.su ./Core/Src/freertos.d ./Core/Src/freertos.o ./Core/Src/freertos.su ./Core/Src/fungsi.d ./Core/Src/fungsi.o ./Core/Src/fungsi.su ./Core/Src/gpio.d ./Core/Src/gpio.o ./Core/Src/gpio.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32f1xx_hal_msp.d ./Core/Src/stm32f1xx_hal_msp.o ./Core/Src/stm32f1xx_hal_msp.su ./Core/Src/stm32f1xx_hal_timebase_tim.d ./Core/Src/stm32f1xx_hal_timebase_tim.o ./Core/Src/stm32f1xx_hal_timebase_tim.su ./Core/Src/stm32f1xx_it.d ./Core/Src/stm32f1xx_it.o ./Core/Src/stm32f1xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f1xx.d ./Core/Src/system_stm32f1xx.o ./Core/Src/system_stm32f1xx.su ./Core/Src/terminal.d ./Core/Src/terminal.o ./Core/Src/terminal.su
+	-$(RM) ./Core/Src/EEPROM.d ./Core/Src/EEPROM.o ./Core/Src/EEPROM.su ./Core/Src/HC04.d ./Core/Src/HC04.o ./Core/Src/HC04.su ./Core/Src/adc.d ./Core/Src/adc.o ./Core/Src/adc.su ./Core/Src/com_can.d ./Core/Src/com_can.o ./Core/Src/com_can.su ./Core/Src/crc.d ./Core/Src/crc.o ./Core/Src/crc.su ./Core/Src/error_handler.d ./Core/Src/error_handler.o ./Core/Src/error_handler.su ./Core/Src/freertos.d ./Core/Src/freertos.o ./Core/Src/freertos.su ./Core/Src/fungsi.d ./Core/Src/fungsi.o ./Core/Src/fungsi.su ./Core/Src/gpio.d ./Core/Src/gpio.o ./Core/Src/gpio.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32f1xx_hal_msp.d ./Core/Src/stm32f1xx_hal_msp.o ./Core/Src/stm32f1xx_hal_msp.su ./Core/Src/stm32f1xx_hal_timebase_tim.d ./Core/Src/stm32f1xx_hal_timebase_tim.o ./Core/Src/stm32f1xx_hal_timebase_tim.su ./Core/Src/stm32f1xx_it.d ./Core/Src/stm32f1xx_it.o ./Core/Src/stm32f1xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f1xx.d ./Core/Src/system_stm32f1xx.o ./Core/Src/system_stm32f1xx.su ./Core/Src/terminal.d ./Core/Src/terminal.o ./Core/Src/terminal.su
 
 .PHONY: clean-Core-2f-Src
 

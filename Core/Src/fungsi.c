@@ -10,6 +10,7 @@
 #include "EEPROM.h"
 #include "string.h"
 #include "com_can.h"
+#include "adc.h"
 #include <gpio.h>
 #include <HC04.h>
 #include "FreeRTOS.h"
@@ -44,14 +45,14 @@ uint32_t counter;
 uint32_t mode;
 uint32_t timerBackwash;
 uint16_t lamaMampet;
-uint32_t countBackwash;
+uint16_t countBackwash;
 uint32_t countProcess;
 uint32_t lamaProcess;
 uint32_t lamaPakaiEAB;
 uint32_t dataWrite[10];
 uint32_t dataRead[10];
 
-float volume, flow; // variabel untuk flow sensor
+float volume, flow, currentEAB, voltEAB; // variabel untuk flow sensor
 int signalCounter, buttonCounter; // variabel untuk counter hall sensor dan button
 
 // kumpulan fungsi
@@ -90,7 +91,7 @@ void backWash(void) {
 
 	uint8_t i = 0;
 
-	while (i <= 30) { //menunggu sinyal dari driver bahwa backwash telah selesai
+	while (i <= 20) { //menunggu sinyal dari driver bahwa backwash telah selesai
 		osDelay(1000);
 		i++;
 	}
@@ -101,7 +102,7 @@ void backWash(void) {
 
 void process(void) {
 
-	delay_s(2);
+	delay_s(7);
 
 //	if (level == 1) {
 //		mode = 0;
@@ -111,7 +112,7 @@ void process(void) {
 
 	flagTimerEAB = 1; // flag untuk memulai timer EAB
 
-	while (timerEAB < 1200) {
+	while (timerEAB < 3600) {
 		EAB(ON);
 		delay_s(1);
 		if (mode == 0) {
@@ -126,6 +127,9 @@ void process(void) {
 
 	while (timerRecoveryEAB < 600) {
 		delay_s(1);
+		if (mode == 0) {
+			goto end;
+		}
 	}
 
 	flagRecoveryEAB = 0; // flag untuk recover EAB
@@ -146,20 +150,21 @@ void process(void) {
 	flagBackwash = 1; // penanda start backwash untuk perhitungan lamanya filter tersumbat
 	lamaMampet = 0; // reset waktu mampet filter
 
-	delay_s(30);
+	delay_s(10);
 
 	while (1) {
 
-		osDelay(3000);
+		osDelay(1000);
 
 		if (flow < 4 //|| level == 1
 		|| mode == 0) {
 			countBackwash++;
 			delay_s(1);
 			setCountBackwash(countBackwash);
-			dataCan[0] = countBackwash;
-			dataCan[1] = lamaMampet & 0x00ff;
-			dataCan[2] = (lamaMampet & 0xff00) >> 8;
+			dataCan[0] = countBackwash & 0x0ff;
+			dataCan[1] = (countBackwash & 0xff00) >> 8;
+			dataCan[2] = lamaMampet & 0x00ff;
+			dataCan[3] = (lamaMampet & 0xff00) >> 8;
 			comm_can_transmit_eid(4, dataCan, 8);
 			Ozone(OFF);
 			Compressor(OFF);
@@ -186,6 +191,7 @@ void process(void) {
 	mode = 0;
 	countProcess++;
 	setCountProcess(countProcess);
+	comm_can_db_signal(0, 0);
 
 	flagTimerEAB = 0;
 	flagRecoveryEAB = 0;
@@ -270,6 +276,7 @@ void Task2(void const *argument) {
 			timerRecoveryEAB = 0;
 			setTimerRcoveryEAB(timerRecoveryEAB);
 		}
+
 		osDelay(1000);
 		//cobaTask2++;
 
@@ -310,6 +317,8 @@ void TaskTimer(void const *argument) {
 		flow = signalCounter / 7.5;
 		signalCounter = 0;
 		cobaTaskTimer++;
+		currentEAB = Get_Current_EAB();
+		voltEAB = Get_Volt_EAB();
 		osDelay(1000);
 
 	}
@@ -378,10 +387,9 @@ void fungsiInit(void) {
 	timerRecoveryEAB = EEPROM_Read_NUM(1, TIMERRECOVERYEAB);
 	HAL_Delay(10);
 
-	//mode = 2;
 //	setMode(mode);
-//	setLamaPakaiEAB(630);
-//	setCountBackwash(154);
+//	setLamaPakaiEAB(660);
+//	setCountBackwash(173);
 
 	osThreadDef(TaskTimer, TaskTimer, osPriorityNormal, 0, 64);
 	TaskTimerHandle = osThreadCreate(osThread(TaskTimer), NULL);
