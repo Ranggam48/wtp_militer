@@ -75,6 +75,7 @@ void StartDefaultTask(void const *argument);
 
 /* USER CODE BEGIN PFP */
 uint8_t cobaTask1;
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -138,7 +139,7 @@ int main(void) {
 
 	/* Create the thread(s) */
 	/* definition and creation of defaultTask */
-	osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+	osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 64);
 	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
 	/* USER CODE BEGIN RTOS_THREADS */
@@ -528,8 +529,8 @@ static void MX_GPIO_Init(void) {
 void StartDefaultTask(void const *argument) {
 	/* USER CODE BEGIN 5 */
 	//uint8_t send[8] = "rangga";
-	comm_can_set_duty(0, 95);
-	comm_can_db_signal(0, 2);
+//	comm_can_set_duty(0, 95);
+//	comm_can_db_signal(0, 2);
 	/* Infinite loop */
 	for (;;) {
 //		for (uint8_t a = 0; a < 8; a++) {

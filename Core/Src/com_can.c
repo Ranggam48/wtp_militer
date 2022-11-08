@@ -18,6 +18,7 @@
 #define RX_BUFFER_SIZE 64
 #define CAN_PACKET_SET_DUTY_GEN 36
 #define CAN_PACKET_ERRORMASSAGE 37
+#define CAN_PACKET_FILL_RX_BUFFER_F1 40
 
 extern CAN_HandleTypeDef hcan;
 extern uint32_t selfID;
@@ -174,7 +175,8 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data,
 			}
 
 			comm_can_transmit_eid(
-					controller_id | ((uint32_t) CAN_PACKET_FILL_RX_BUFFER << 8),
+					controller_id
+							| ((uint32_t) CAN_PACKET_FILL_RX_BUFFER_F1 << 8),
 					send_buffer, send_len + 1);
 		}
 		//------------------------------------------------

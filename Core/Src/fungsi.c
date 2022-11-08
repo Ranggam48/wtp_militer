@@ -13,6 +13,7 @@
 #include "adc.h"
 #include <gpio.h>
 #include <HC04.h>
+#include "sendData.h"
 #include "FreeRTOS.h"
 #include"FreeRTOSConfig.h"
 #include "cmsis_os.h"
@@ -21,12 +22,17 @@ typedef enum {
 	ON = 0, OFF
 } Pin_Status;
 
+// kumpulan extern
+extern uint8_t bufferCanTx[32];
+extern UART_HandleTypeDef huart1;
+
 // kumpulan handle task freeRTOS
 
 osThreadId Task2Handle;
 osThreadId TaskTimerHandle;
 osThreadId TaskFlowHandle;
 osThreadId TaskButtonHandle;
+osThreadId TaskCanTxHandle;
 
 // kumpulan variable dan penanda/flag
 
@@ -36,7 +42,12 @@ uint8_t flowCheck, backWashCheck, flag, level, flagBackwash, flagTimerEAB,
 
 uint8_t selfID = 1;
 uint8_t dataCan[8];
+uint8_t dataUart[12];
 uint8_t p;
+uint8_t clean;
+
+uint16_t indicator;
+uint8_t indicator1, indicator2;
 
 uint32_t buffEAB;
 uint32_t timerEAB;
@@ -112,20 +123,32 @@ void process(void) {
 
 	flagTimerEAB = 1; // flag untuk memulai timer EAB
 
-	while (timerEAB < 3600) {
+	while (timerEAB < 1800) {
 		EAB(ON);
 		delay_s(1);
 		if (mode == 0) {
 			goto end;
 		}
 	}
+
+//	while (1) {
+//		EAB(ON);
+//		delay_s(1);
+//		if (mode == 0) {
+//			goto end;
+//		}
+//
+//		if (clean) {
+//			break;
+//		}
+//	}
 	EAB(OFF);
 
 	flagTimerEAB = 0; // flag untuk menghentikan timer EAB
 
 	flagRecoveryEAB = 1; // flag untuk recover EAB
 
-	while (timerRecoveryEAB < 600) {
+	while (timerRecoveryEAB < 100) {
 		delay_s(1);
 		if (mode == 0) {
 			goto end;
@@ -317,8 +340,8 @@ void TaskTimer(void const *argument) {
 		flow = signalCounter / 7.5;
 		signalCounter = 0;
 		cobaTaskTimer++;
-		currentEAB = Get_Current_EAB();
-		voltEAB = Get_Volt_EAB();
+		currentEAB = 4.56; //Get_Current_EAB();
+		voltEAB = 12.11; //Get_Volt_EAB();
 		osDelay(1000);
 
 	}
@@ -367,6 +390,25 @@ void TaskButton(void const *argument) {
 	/* USER CODE END 5 */
 }
 
+void TaskCanTx(void const *argument) {
+	/* USER CODE BEGIN 5 */
+
+	/* Infinite loop */
+	for (;;) {
+
+		manageData();
+		comm_can_send_buffer(7, bufferCanTx, sizeof(bufferCanTx), 1);
+		HAL_UART_Receive(&huart1, dataUart, sizeof(dataUart), 500);
+		if ((dataUart[0] == 50)) {
+			clean = dataUart[1];
+		}
+		osDelay(500);
+		cobaTask2++;
+
+	}
+	/* USER CODE END 5 */
+}
+
 void fungsiInit(void) {
 
 	gpio_init();
@@ -397,10 +439,13 @@ void fungsiInit(void) {
 	osThreadDef(Task2, Task2, osPriorityNormal, 0, 64);
 	Task2Handle = osThreadCreate(osThread(Task2), NULL);
 
-	osThreadDef(TaskFlow, TaskFlow, osPriorityBelowNormal, 0, 64);
+	osThreadDef(TaskFlow, TaskFlow, osPriorityBelowNormal, 0, 32);
 	TaskFlowHandle = osThreadCreate(osThread(TaskFlow), NULL);
 
-	osThreadDef(TaskButton, TaskButton, osPriorityBelowNormal, 0, 64);
+	osThreadDef(TaskButton, TaskButton, osPriorityBelowNormal, 0, 32);
 	TaskButtonHandle = osThreadCreate(osThread(TaskButton), NULL);
+
+	osThreadDef(TaskCanTx, TaskCanTx, osPriorityBelowNormal, 0, 64);
+	TaskCanTxHandle = osThreadCreate(osThread(TaskCanTx), NULL);
 }
 

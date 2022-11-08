@@ -7,6 +7,10 @@
 #include <gpio.h>
 #include "stm32f1xx.h"
 
+extern uint16_t indicator;
+extern uint8_t indicator1, indicator2;
+extern uint8_t bufferCanTx[32];
+
 void gpio_init(void) {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
@@ -124,48 +128,106 @@ void gpio_init(void) {
 
 void EAB(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, value);
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, value);
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, value);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, value);
+	if (value == 1) {
+		bufferCanTx[12] = 0;
+	} else {
+		bufferCanTx[12] = 1;
+	}
+
 }
 
 void Control_Valve_1(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, value);
+	if (value == 1) {
+		bufferCanTx[11] = 0;
+	} else {
+		bufferCanTx[11] = 1;
+	}
+
 }
 
 void Control_Valve_2(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, value);
+	if (value == 1) {
+		bufferCanTx[10] = 0;
+	} else {
+		bufferCanTx[10] = 1;
+	}
 }
 
 void Control_Valve_3(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, value);
+	if (value == 1) {
+		bufferCanTx[9] = 0;
+	} else {
+		bufferCanTx[9] = 1;
+	}
+
 }
 
 void Control_Valve_4(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, value);
+//	if (value == 1) {
+//		bufferCanTx[8] = 0;
+//	} else {
+//		bufferCanTx[8] = 1;
+//	}
 }
 
 void Control_Valve_5(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, value);
+//	if (value == 1) {
+//		bufferCanTx[8] = 0;
+//	} else {
+//		bufferCanTx[8] = 1;
+//	}
 }
 
 void Compressor(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, value);
 	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, value);
+	if (value == 1) {
+		bufferCanTx[13] = 0;
+	} else {
+		bufferCanTx[13] = 1;
+	}
+
 }
 
 void Ozone(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, value);
+	if (value == 1) {
+		bufferCanTx[14] = 0;
+	} else {
+		bufferCanTx[14] = 1;
+	}
 }
 
 void Pump_1(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, value);
+	if (value == 1) {
+		bufferCanTx[8] = 0;
+	} else {
+		bufferCanTx[8] = 1;
+	}
 }
 
 void Pump_2(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, value);
+
+	if (value == 1) {
+		bufferCanTx[7] = 0;
+	} else {
+		bufferCanTx[7] = 1;
+	}
 }
 
 void Pump_3(uint8_t value) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, value);
+	if (value == 1) {
+		bufferCanTx[6] = 0;
+	} else {
+		bufferCanTx[6] = 1;
+	}
 }
