@@ -8,6 +8,7 @@
 #include "stm32f1xx.h"
 
 #define TRIG1_PIN GPIO_PIN_4
+#define TRIG2_PIN GPIO_PIN_5
 #define TRIG_PORT GPIOB
 
 extern TIM_HandleTypeDef htim2;

@@ -36,9 +36,9 @@ osThreadId TaskCanTxHandle;
 
 // kumpulan variable dan penanda/flag
 
-uint8_t flowCheck, backWashCheck, flag, level, flagBackwash, flagTimerEAB,
-		flagRecoveryEAB, cobaTask2, cobaTaskTimer, cobaTaskButton, cobaTaskFlow,
-		sensor;
+uint8_t flowCheck, backWashCheck, flag, level, level2, flagBackwash,
+		flagTimerEAB, flagRecoveryEAB, cobaTask2, cobaTaskTimer, cobaTaskButton,
+		cobaTaskFlow, sensor;
 
 uint8_t selfID = 1;
 uint8_t dataCan[8];
@@ -91,6 +91,7 @@ void backWash(void) {
 	Ozone(OFF);
 	Compressor(OFF);
 	flagBackwash = 0; // memulai rekam waktu filtrasi rdf sampai tersumbat
+	setFlagBackwash(flagBackwash);
 	//Pump_2(OFF);
 
 	delay_s(10);
@@ -98,6 +99,9 @@ void backWash(void) {
 	delay_s(5);
 	comm_can_db_signal(0, 4); // mengirim sinyal ke driver untuk backwash
 	delay_s(1);
+
+	Control_Valve_3(ON);
+	Control_Valve_2(OFF);
 	Pump_3(ON); // pompa backwash menyala
 
 	uint8_t i = 0;
@@ -109,6 +113,9 @@ void backWash(void) {
 	Pump_3(OFF); //pompa backwash mati
 	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
 	delay_s(5);
+
+	Control_Valve_3(OFF);
+	Control_Valve_2(ON);
 }
 
 void process(void) {
@@ -123,7 +130,7 @@ void process(void) {
 
 	flagTimerEAB = 1; // flag untuk memulai timer EAB
 
-	while (timerEAB < 1800) {
+	while (timerEAB < 180) {
 		EAB(ON);
 		delay_s(1);
 		if (mode == 0) {
@@ -155,9 +162,17 @@ void process(void) {
 		}
 	}
 
+	comm_can_db_signal(0, 0); // mengirim sinyal ke driver untuk mematikan rdf
+
 	flagRecoveryEAB = 0; // flag untuk recover EAB
 
+	backWash();
+
 	label2: // balik lagi ke sini jika air masih penuh
+
+	if (flagBackwash == 1) {
+		backWash();
+	}
 
 	comm_can_set_duty(0, 95);
 	comm_can_db_signal(0, 2); // megirim sinyal untuk memutarkan HVRDF
@@ -165,15 +180,31 @@ void process(void) {
 	delay_s(7); //delay untuk menunggu rdf putaran penuh
 
 	Control_Valve_1(ON);
+
 	Pump_1(ON);
+	Control_Valve_4(ON); // control valve 4 dialokasikan untuk solenoid valve oksigen konsentrator
+
+	delay_s(1);
+
 	Ozone(ON);
 	Compressor(ON);
 	Pump_2(ON);
 
+	// mengisi tangki backwash
+	Control_Valve_3(ON);
+	Control_Valve_2(OFF);
+
+	delay_s(6); // delay
+
+	// tutup tangki backwash
+	Control_Valve_3(OFF);
+	Control_Valve_2(ON);
+
 	flagBackwash = 1; // penanda start backwash untuk perhitungan lamanya filter tersumbat
+	setFlagBackwash(flagBackwash);
 	lamaMampet = 0; // reset waktu mampet filter
 
-	delay_s(10);
+	delay_s(20);
 
 	while (1) {
 
@@ -191,6 +222,8 @@ void process(void) {
 			comm_can_transmit_eid(4, dataCan, 8);
 			Ozone(OFF);
 			Compressor(OFF);
+			delay_s(1);
+			Control_Valve_4(OFF);
 			backWash();
 			break;
 		}
@@ -269,6 +302,12 @@ void setLamaProcess(uint32_t value) {
 
 }
 
+void setFlagBackwash(uint32_t value) {
+
+	EEPROM_Write_NUM(1, FLAGBACKWASH, value);
+
+}
+
 // kumpulan task freeRTOS
 
 void Task2(void const *argument) {
@@ -299,7 +338,7 @@ void Task2(void const *argument) {
 			timerRecoveryEAB = 0;
 			setTimerRcoveryEAB(timerRecoveryEAB);
 		}
-
+		cobaTask2++;
 		osDelay(1000);
 		//cobaTask2++;
 
@@ -356,6 +395,7 @@ void TaskFlow(void const *argument) {
 	for (;;) {
 		stateSensorNow = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
 		level = (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4));
+		level2 = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15));
 		if (stateSensorNow != stateSensorPrv) {
 			signalCounter++;
 			stateSensorPrv = stateSensorNow;
@@ -403,7 +443,6 @@ void TaskCanTx(void const *argument) {
 			clean = dataUart[1];
 		}
 		osDelay(500);
-		cobaTask2++;
 
 	}
 	/* USER CODE END 5 */

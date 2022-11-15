@@ -60,6 +60,11 @@ void gpio_init(void) {
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+	GPIO_InitStruct.Pin = GPIO_PIN_15;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 	/*Configure GPIO pin : PB5 */
 	GPIO_InitStruct.Pin = GPIO_PIN_13;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -196,7 +201,7 @@ void Compressor(uint8_t value) {
 }
 
 void Ozone(uint8_t value) {
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, value);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, value);
 	if (value == 1) {
 		bufferCanTx[14] = 0;
 	} else {

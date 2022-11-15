@@ -19,7 +19,8 @@ typedef enum {
 	COUNTPROCESS = 16,
 	LAMAPROCESS = 20,
 	LAMAPAKAIEAB = 24,
-	TIMERRECOVERYEAB = 28
+	TIMERRECOVERYEAB = 28,
+	FLAGBACKWASH = 32
 
 } adress;
 
@@ -36,6 +37,7 @@ void setCountProcess(uint32_t value);
 void setLamaProcess(uint32_t value);
 void setTimerRcoveryEAB(uint32_t value);
 void setLamaPakaiEAB(uint32_t value);
+void setFlagBackwash(uint32_t value);
 
 void Task2(void const *argument);
 void TaskFlow(void const *argument);
